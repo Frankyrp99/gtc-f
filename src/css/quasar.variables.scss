@@ -2,24 +2,224 @@
 // --------------------------------------------------
 // To customize the look and feel of this app, you can override
 // the Sass/SCSS variables found in Quasar's source Sass/SCSS files.
-
 // Check documentation for full list of Quasar variables
-
 // Your own variables (that are declared here) and Quasar's own
 // ones will be available out of the box in your .vue/.scss/.sass files
-
 // It's highly recommended to change the default colors
 // to match your app's branding.
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
+$primary: #2a8cb9;
+$secondary: #26a69a;
+$accent: #fdfafe;
+$dark: #1d1d1d;
+$dark-page: #121212;
+$positive: #21ba45;
+$negative: #c10015;
+$info: #31ccec;
+$warning: #f2c037;
+$color-gris: #b6b6b6;
 
-$primary   : #1976D2;
-$secondary : #26A69A;
-$accent    : #9C27B0;
+// Modo Oscuro
+$primary-dark: #314a55; // Puedes elegir un tono más oscuro o diferente
+$secondary-dark: #26a69a; // Similarmente, ajusta el tono
+$accent-dark: #fdfafe; // Este puede ser un blanco oscuro o gris claro
+$dark-dark: #1d1d1d; // Fondo oscuro
+$dark-page-dark: #121212; // Página oscura
+$positive-dark: #21ba45; // Verde oscuro
+$negative-dark: #c10015; // Rojo oscuro
+$info-dark: #31ccec; // Azul oscuro
+$warning-dark: #f2c037; // Amarillo oscuro
+$color-gris-dark: #b6b6b6; // Gris oscuro
 
-$dark      : #1D1D1D;
-$dark-page : #121212;
+// Aplicar el modo oscuro cuando sea necesario
+body.dark-mode {
+  --q-color-primary: $primary-dark;
+  --q-color-secondary: $secondary-dark;
+  --q-color-accent: $accent-dark;
+  --q-color-negative: $negative-dark;
+  --q-color-positive: $positive-dark;
+  --q-color-warning: $warning-dark;
+  --q-color-info: $info-dark;
+  --q-color-gris: $color-gris-dark;
+  --q-background-color: $dark-dark;
+  --q-text-color: $color-gris-dark;
+}
 
-$positive  : #21BA45;
-$negative  : #C10015;
-$info      : #31CCEC;
-$warning   : #F2C037;
+@font-face {
+  font-family: 'Gliker';
+  src: url('/src/assets/Gliker.ttf') format('truetype');
+}
+
+@mixin linear-gradient($direction, $start-color, $end-color) {
+  background-image: linear-gradient($direction, $start-color, $end-color);
+}
+
+$background-color-start: #9de0ff;
+$background-color-end: #2a8cb9;
+
+.text-color {
+  background-color: #2a3fb9;
+}
+.fondo-card-fecha {
+  background-color: #2ca6df7a;
+}
+.toolbarcolor {
+  background-color: #c0dcec;
+}
+.grisneutro {
+  background-color: #efefef;
+}
+.bg-color {
+  background-image: linear-gradient(
+    to left,
+    $background-color-start 0%,
+    $background-color-end 100%
+  );
+}
+.q-btn {
+  transition: transform 0.3s ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.26);
+  padding: 10px;
+
+  color: #131313;
+  background-color: rgb(255, 255, 255);
+}
+
+.q-form {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.26);
+  padding: 20px;
+
+  color: #050505;
+  background-color: #808080;
+
+  max-width: 400px;
+  margin: auto;
+}
+
+.card-negocios {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.26);
+  padding: 20px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  color: #080808;
+}
+.titulos {
+  font-size: 28px;
+
+  font-weight: 600;
+  letter-spacing: -1px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+}
+.texto-truncado {
+  max-width: 50px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fondo-transparente {
+  background: none !important; /* Elimina el fondo */
+  border: none !important;
+  box-shadow: none; /* Elimina el borde */
+}
+.bg {
+  background: none !important; /* Elimina el fondo */
+  border: none !important;
+  box-shadow: none; /* Elimina el borde */
+}
+
+.q-btn-dropdown.q-icon {
+  /* Ajusta el tamaño del ícono si es necesario */
+  font-size: 24px;
+}
+.text-gliker {
+  font-family: 'Gliker', fallback, sans-serif;
+}
+.content-div {
+  width: calc(
+    100% - 60px
+  ); /* Restamos 60px porque queremos 30px en cada lado */
+  margin-left: 40px;
+  margin-right: 40px;
+}
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.flex-item {
+  flex-basis: calc(33.333% - 40px);
+  margin-bottom: 20px;
+  box-sizing: border-box;
+  padding: 10px;
+}
+.q-footer {
+  background-color: #ffffff;
+  color: #050505;
+  padding-top: 2px;
+}
+.q-page {
+  padding: 20px;
+}
+.suggested-authors-list-container {
+  position: relative; /* Contenedor relativo para posicionar absolutamente la lista */
+}
+
+.suggested-authors-list {
+  position: absolute;
+  top: 100%; /* Empieza justo debajo del último elemento del contenedor */
+  left: 0;
+  z-index: 10; /* Asegura que la lista se muestre encima de otros elementos */
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px; /* Ajusta según sea necesario */
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Opcional: para darle un efecto elevado */
+}
+
+.suggested-authors-list li {
+  cursor: pointer;
+  padding: 8px 12px;
+  background-color: #f9f9f9;
+}
+
+.suggested-authors-list li:hover {
+  background-color: #e0e0e0;
+}
+.firma {
+  max-width: 150px;
+  height: auto;
+  margin-top: 10px;
+}
+.descripcion-contenedor {
+  width: 300px;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  margin: auto;
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .descripcion-contenedor {
+    width: 250px;
+  }
+}
+.whatsapp-button {
+  min-width: 50px;
+  margin: auto;
+  margin-bottom: 20px;
+}
