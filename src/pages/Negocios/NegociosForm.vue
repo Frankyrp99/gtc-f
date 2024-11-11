@@ -75,15 +75,16 @@
             </div>
           </div>
 
-          <div class="row q-gutter-xl q-gutter-y-md">
+          <div>
             <div>
               <div>
                 <p class="text-bold text-body2" style="width: 200px">
                   Imagen del negocio
                 </p>
               </div>
-              <q-file
-                style="width: 200px"
+              <q-uploader
+                color="white"
+                text-color="black"
                 accept=".jpg, .jpeg, .png"
                 label="Sube una imagen"
                 counter
