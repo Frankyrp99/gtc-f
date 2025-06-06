@@ -2,13 +2,12 @@
   <div>
     <q-toolbar class="fixed-toolbar">
       <div class="container-global row items-center justify-between">
-        <q-toolbar-title class="text-bold q-mt-md"> Sabinal </q-toolbar-title>
-        <q-btn
-          size="sm"
-          color="black"
-          icon="account_circle"
-          to="/Nuevo Negocio"
-        />
+        <q-toolbar-title class="text-bold q-mt-md">
+          Control y Gestión de Registro
+        </q-toolbar-title>
+        <q-btn size="sm" color="black" icon="account_circle" to="/Nuevo Negocio"
+          ><q-tooltip  class="bg-black"> Iniciar Sesión </q-tooltip>
+        </q-btn>
       </div>
     </q-toolbar>
 
@@ -28,7 +27,11 @@
   left: 0;
   width: 100%;
   z-index: 1000; /* Asegura que la toolbar esté encima de otros elementos */
-  background-color: white; /* Color de fondo para que la toolbar sea visible sobre el contenido */
+  background-color: rgb(
+    245,
+    242,
+    242
+  ); /* Color de fondo para que la toolbar sea visible sobre el contenido */
   /* box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /*Añade una sombra para darle más definición */
 }
 

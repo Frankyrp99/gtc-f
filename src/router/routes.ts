@@ -4,7 +4,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [
+      {
+        path: '',
+        name: 'index',
+        component: () => import('pages/IndexPage.vue'),
+      },
+    ],
   },
   {
     path: '/Negocio',
@@ -12,7 +18,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'Negocio',
+        name: 'Solicitudes',
         component: () => import('src/components/NegociosPage.vue'),
       },
     ],
@@ -29,13 +35,13 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/Nuevo Negocio',
+    path: '/Nuevo Registro',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
-        name: 'NewNegocio',
-        component: () => import('src/pages/Negocios/NegociosForm.vue'),
+        name: 'NewRegistro',
+        component: () => import('src/pages/Negocios/SolicitudForm.vue'),
       },
     ],
   },
