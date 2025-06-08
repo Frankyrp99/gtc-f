@@ -2,8 +2,8 @@
   <div class="footer q-mx-sm q-my-md">
     <div class="separator"></div>
     <div class="footer-content">
-      <div class="footer-text text-bold text-black">
-        2024 - Todos los Derechos Reservados
+      <div class="footer-text  text-bold text-black">
+        2025 - Todos los Derechos Reservados
       </div>
     </div>
   </div>

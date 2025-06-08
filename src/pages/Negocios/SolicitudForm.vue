@@ -7,129 +7,138 @@
       </q-breadcrumbs>
     </div>
 
-    <div
-      class="row justify-around"
-      style="margin-top: 30px; margin-bottom: 30px"
-    >
-      <div>
-        <p class="text-bold text-body1">Formulario de Solicitud</p>
-        <p class="text-bold text-body2" style="color: grey">
+    <div class="form-container">
+      <div class="form-header">
+        <p class="text-bold text-h6">Formulario de Solicitud</p>
+        <p class="text-caption text-grey-7">
           Introduce los detalles de tu solicitud
         </p>
       </div>
 
-      <q-form @submit="onSubmit" id="form">
-        <div class="q-gutter-md row justify-center items-center">
-          <div class="q-gutter-xl q-gutter-y-md row justify-around">
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Número de Orden</p></div>
+      <q-form @submit="onSubmit" class="form-content">
+        <!-- SECCIÓN 1: DATOS DE LA SOLICITUD -->
+        <div class="form-section">
+          <p class="section-title">Datos de la Solicitud</p>
+          <div class="row q-col-gutter-md">
+            <div class="col-md-4 col-sm-6 col-xs-12">
               <q-input
-                style="width: 200px"
-                autogrow
                 outlined
                 dense
                 v-model="form.numero_orden"
-                label="Ej: N001"
-                class="form-item"
+                label="Número de Orden *"
+                placeholder="Ej: N001"
                 required
               />
             </div>
-            <div class="column q-gutter-md-y-sm">
-              <div>
-                <p class="text-bold text-body2">Número de Certificado</p>
-              </div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
               <q-input
-                style="width: 200px"
-                autogrow
                 outlined
                 dense
                 v-model="form.numero_certificado"
-                label="Ej: C001"
-                class="form-item"
+                label="Número de Certificado *"
+                placeholder="Ej: C001"
                 required
               />
             </div>
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Nombre y Apellidos</p></div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
               <q-input
-                style="width: 200px"
-                autogrow
-                outlined
-                dense
-                v-model="form.nombre_apellidos"
-                label="Ej: Juan Pérez García"
-                class="form-item"
-                required
-              />
-            </div>
-          </div>
-
-          <div class="content-div">
-            <div><p class="text-bold text-body2">Dirección</p></div>
-            <q-input
-              autogrow
-              outlined
-              dense
-              v-model="form.direccion"
-              label="Introduce tu dirección completa"
-              class="form-item"
-              required
-            />
-          </div>
-          <div class="q-gutter-xl q-gutter-y-md row justify-around">
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Fecha de Entrada</p></div>
-              <q-input
-                style="width: 200px"
                 outlined
                 dense
                 v-model="form.fecha_entrada"
-                label="Ej: 2023-05-15"
-                class="form-item"
+                label="Fecha de Entrada"
+                placeholder="Ej: 2023-05-15"
               >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date v-model="form.fecha_entrada" mask="YYYY-MM-DD">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Cerrar" color="primary" />
-                        </div>
-                      </q-date>
+                    <q-popup-proxy cover>
+                      <q-date color="black" v-model="form.fecha_entrada" mask="YYYY-MM-DD" />
                     </q-popup-proxy>
                   </q-icon>
                 </template>
               </q-input>
             </div>
+          </div>
+        </div>
 
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Personal Encargado</p></div>
+        <!-- SECCIÓN 2: DATOS PERSONALES -->
+        <div class="form-section">
+          <p class="section-title">Datos Personales</p>
+          <div class="row q-col-gutter-md">
+            <div class="col-md-6 col-xs-12">
               <q-input
-                style="width: 200px"
-                autogrow
                 outlined
                 dense
-                v-model="form.personal_atencion"
-                label="Ej: Tc. Ana Gómez"
-                class="form-item"
+                v-model="form.nombre_apellidos"
+                label="Nombre y Apellidos *"
+                placeholder="Ej: Juan Pérez García"
                 required
               />
             </div>
-
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Estado</p></div>
+            <div class="col-md-6 col-xs-12">
               <q-select
-                style="width: 200px"
-                v-model="form.estado"
-                label="Selecione una Opción"
-                class="form-item"
                 outlined
                 dense
-                emit-value
-                map-options
+                v-model="form.persona"
+                label="Tipo de Persona *"
+                :options="['Natural', 'Jurídica']"
+                required
+              />
+            </div>
+          </div>
+          <div class="row q-col-gutter-md q-mt-sm">
+            <div class="col-xs-12">
+              <q-input
+                outlined
+                dense
+                v-model="form.direccion"
+                label="Dirección Completa *"
+                placeholder="Introduce tu dirección completa"
+                required
+              />
+            </div>
+          </div>
+          <div class="row q-col-gutter-md q-mt-sm">
+            <div class="col-md-6 col-xs-12">
+              <q-select
+                outlined
+                dense
+                v-model="form.asentamiento"
+                label="Asentamiento *"
+                :options="[
+                  'Nuevitas',
+                  'San Miguel de Nuevitas',
+                  'Playa Santa Lucía',
+                  'Camalote',
+                  'Pastelillo',
+                  'La Jíbara',
+                  'Punta Alegre'
+                ]"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: PROCESAMIENTO -->
+        <div class="form-section">
+          <p class="section-title">Procesamiento</p>
+          <div class="row q-col-gutter-md">
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <q-input
+                outlined
+                dense
+                v-model="form.personal_atencion"
+                label="Personal Encargado *"
+                placeholder="Ej: Tc. Ana Gómez"
+                required
+              />
+            </div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <q-select
+                outlined
+                dense
+                v-model="form.estado"
+                label="Estado *"
                 :options="[
                   'En Proceso',
                   'Para Imprimir',
@@ -139,60 +148,18 @@
                 required
               />
             </div>
-          </div>
-          <div class="q-gutter-xl q-gutter-y-md row justify-around">
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Asentamiento</p></div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
               <q-input
-                style="width: 200px"
-                autogrow
-                outlined
-                dense
-                v-model="form.asentamiento"
-                label="Ej: Nuevitas"
-                class="form-item"
-                required
-              />
-            </div>
-
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Persona</p></div>
-              <q-select
-                style="width: 200px"
-                v-model="form.persona"
-                label="Selecione una Opción"
-                class="form-item"
-                outlined
-                dense
-                emit-value
-                map-options
-                :options="['Natural', 'Jurídica']"
-                required
-              />
-            </div>
-
-            <div class="column q-gutter-md-y-sm">
-              <div><p class="text-bold text-body2">Fecha de Entrega</p></div>
-              <q-input
-                style="width: 200px"
                 outlined
                 dense
                 v-model="form.fecha_entrega"
-                label="Ej: 2023-05-15"
-                class="form-item"
+                label="Fecha de Entrega"
+                placeholder="Ej: 2023-05-15"
               >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date v-model="form.fecha_entrega" mask="YYYY-MM-DD">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Cerrar" color="primary" />
-                        </div>
-                      </q-date>
+                    <q-popup-proxy cover>
+                      <q-date color="black" v-model="form.fecha_entrega" mask="YYYY-MM-DD" />
                     </q-popup-proxy>
                   </q-icon>
                 </template>
@@ -201,27 +168,25 @@
           </div>
         </div>
 
-        <q-separator inset class="container" />
+        <q-separator class="q-my-lg" />
 
-        <div class="row justify-end items-center">
+        <!-- BOTONES -->
+        <div class="form-actions">
           <q-btn
+            outline
             rounded
-            size="sm"
             label="Volver"
-            class="form-item text-weight-bolder"
-            color="white"
-            text-color="black"
-            style="margin-top: 20px; margin-bottom: 20px; margin-right: 10px"
+            class="q-mr-sm"
+
+            size="sm"
             @click="$router.back()"
           />
           <q-btn
             rounded
-            size="sm"
             label="Enviar Solicitud"
             type="submit"
-            class="form-item text-weight-bolder"
             color="black"
-            style="margin-top: 20px; margin-bottom: 20px"
+            size="sm"
           />
         </div>
       </q-form>
@@ -237,8 +202,6 @@ import { useQuasar } from 'quasar';
 
 const router = useRouter();
 const $q = useQuasar();
-
-
 
 interface Form {
   numero_orden?: string;
@@ -275,13 +238,12 @@ watch(
       form.fecha_entrega = null;
     }
   },
-  { immediate: true } // Esto asegura que se ejecute el watcher al inicializar la componente
+  { immediate: true }
 );
 
 function onSubmit() {
   $q.loading.show();
 
- 
   api
     .post('/api/Solicitudes/', form)
     .then(() => {
@@ -308,28 +270,43 @@ function onSubmit() {
 </script>
 
 <style scoped>
-.container-global {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(
-    100vh - 56px
-  ); /* Ajuste para quitar el espacio de la barra superior */
-}
-
-.q-form {
-  width: 100%;
+.form-container {
   max-width: 800px;
-  color: black;
-  background-color: #fff;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: white;
   border-radius: 8px;
-  margin: auto;
-  padding: 35px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-@media (max-width: 768px) {
-  .q-form {
-    padding: 20px;
-  }
+.form-header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.form-content {
+  padding: 15px;
+}
+
+.form-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 </style>

@@ -3,11 +3,44 @@
     <q-toolbar class="fixed-toolbar">
       <div class="container-global row items-center justify-between">
         <q-toolbar-title class="text-bold q-mt-md">
-          Control y Gestión de Registro
+          Gestión de Trámites Catastrales
         </q-toolbar-title>
-        <q-btn size="sm" color="black" icon="account_circle" to="/Nuevo Negocio"
-          ><q-tooltip  class="bg-black"> Iniciar Sesión </q-tooltip>
-        </q-btn>
+        <q-btn-dropdown
+          size="sm"
+          color="black"
+          icon="account_circle"
+          label="Cuenta"
+          dropdown-icon="arrow_drop_down"
+          class="q-mr-sm"
+        >
+          <q-list>
+            <q-item clickable v-close-popup to="/">
+              <q-item-section avatar>
+                <q-icon name="login" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Iniciar Sesión</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="user.isAdmin" clickable v-close-popup to="/Admin">
+              <q-item-section avatar>
+                <q-icon name="admin_panel_settings" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Gestión de Usuarios</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup to="/About">
+              <q-item-section avatar>
+                <q-icon name="info" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Acerca de</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </div>
     </q-toolbar>
 
@@ -19,7 +52,42 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { api } from 'src/boot/axios';
+
+const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false });
+
+const fetchUserData = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await api.get('/api/users', config);
+
+    // Verificar si la petición fue exitosa
+    if (response.status === 200) {
+      user.value.role = response.data.role;
+      user.value.isAdmin = response.data.role === 'admin';
+      user.value.isViewerOnly = response.data.role === 'especialista';
+      console.log('Datos del usuario obtenidos correctamente.');
+    } else {
+      console.error(
+        `Error al obtener los datos del usuario: Estado ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+  }
+};
+
+onMounted(fetchUserData);
+</script>
 <style scoped>
 .fixed-toolbar {
   position: fixed;

@@ -2,7 +2,7 @@ import { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/',
+    path: '/Main',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -13,27 +13,39 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/Negocio',
+    path: '/',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'login',
+        component: () => import('src/pages/LoginPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/About',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'about',
+        component: () => import('src/pages/AboutPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/Admin',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
         name: 'Solicitudes',
-        component: () => import('src/components/NegociosPage.vue'),
+        component: () => import('src/pages/Users/AdminPage.vue'),
       },
     ],
   },
-  {
-    path: '/NegocioDetalles/:id',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        name: 'NegocioDetalles',
-        component: () => import('src/pages/Negocios/NegociosDetailPage.vue'),
-      },
-    ],
-  },
+
   {
     path: '/Nuevo Registro',
     component: () => import('layouts/MainLayout.vue'),
@@ -42,6 +54,17 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'NewRegistro',
         component: () => import('src/pages/Negocios/SolicitudForm.vue'),
+      },
+    ],
+  },
+  {
+    path: '/Nuevo Usuario',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'NewRegistro',
+        component: () => import('src/pages/Users/CreateUserPage.vue'),
       },
     ],
   },

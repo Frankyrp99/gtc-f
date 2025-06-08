@@ -22,6 +22,7 @@
         <template v-slot:top-right>
           <div class="row q-gutter-md">
             <q-btn
+              v-if="user.isViewerOnly || user.isAdmin"
               label="Crear Registro"
               color="black"
               size="sm"
@@ -53,6 +54,7 @@
             </q-td>
             <q-td auto-width class="q-gutter-sm">
               <q-btn
+                v-if="user.isViewerOnly || user.isAdmin"
                 color="positive"
                 icon="edit"
                 size="sm"
@@ -61,6 +63,7 @@
                 @click="editRow(props.row)"
               />
               <q-btn
+                v-if="user.isViewerOnly || user.isAdmin"
                 color="negative"
                 icon="delete"
                 size="sm"
@@ -123,7 +126,11 @@
                       transition-show="scale"
                       transition-hide="scale"
                     >
-                      <q-date v-model="selectedRow.fecha_entrada" mask="YYYY-MM-DD">
+                      <q-date
+                        color="black"
+                        v-model="selectedRow.fecha_entrada"
+                        mask="YYYY-MM-DD"
+                      >
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Cerrar" color="primary" />
                         </div>
@@ -150,11 +157,21 @@
                 :options="['En Proceso', 'Cancelado', 'Entregado']"
               />
 
-              <q-input
-                v-model="selectedRow.asentamiento"
-                label="Asentamiento"
+              <q-select
                 outlined
                 dense
+                v-model="selectedRow.asentamiento"
+                label="Asentamiento *"
+                :options="[
+                  'Nuevitas',
+                  'San Miguel de Nuevitas',
+                  'Playa Santa Lucía',
+                  'Camalote',
+                  'Pastelillo',
+                  'La Jíbara',
+                  'Punta Alegre',
+                ]"
+                required
               />
 
               <q-select
@@ -179,7 +196,11 @@
                       transition-show="scale"
                       transition-hide="scale"
                     >
-                      <q-date v-model="selectedRow.fecha_entrega" mask="YYYY-MM-DD">
+                      <q-date
+                        color="black"
+                        v-model="selectedRow.fecha_entrega"
+                        mask="YYYY-MM-DD"
+                      >
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Cerrar" color="primary" />
                         </div>
@@ -189,7 +210,7 @@
                 </template>
               </q-input>
 
-              <div class=" row justify-end q-gutter-md">
+              <div class="row justify-end q-gutter-md">
                 <q-btn
                   v-close-popup
                   label="Cancelar"
@@ -198,7 +219,13 @@
                   size="sm"
                   class="text-color"
                 />
-                <q-btn class="text-color" type="submit" label="Guardar"  dense size="sm"/>
+                <q-btn
+                  class="text-color"
+                  type="submit"
+                  label="Guardar"
+                  dense
+                  size="sm"
+                />
               </div>
             </q-form>
           </q-card-section>
@@ -239,6 +266,7 @@ interface SolicitudType {
 
 const $q = useQuasar();
 const search = ref('');
+const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false });
 const rows = ref<SolicitudType[]>([]);
 const selectedRow = ref<SolicitudType | null>(null);
 const isLoading = ref(false);
@@ -251,7 +279,7 @@ const tooltipContent = ref('');
 const columns = [
   {
     name: 'Número Orden',
-    label: 'Número de Orden',
+    label: 'Noº de Orden',
     field: 'numero_orden',
     sortable: true,
     align: 'left',
@@ -259,7 +287,7 @@ const columns = [
   },
   {
     name: 'Número Certificado',
-    label: 'Número de Certificado',
+    label: 'Noº de Certificado',
     field: 'numero_certificado',
     sortable: true,
     align: 'left',
@@ -334,7 +362,7 @@ const columns = [
   },
   {
     name: 'Tiempo Proceso',
-    label: 'Tiempo Proceso',
+    label: 'Tiempo Proceso en Días',
     field: 'tiempo_proceso',
     sortable: true,
     align: 'left',
@@ -355,16 +383,43 @@ function hideTooltip() {
   showingTooltip.value = false;
 }
 
+const fetchUserData = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await api.get('/api/users', config);
+
+    // Verificar si la petición fue exitosa
+    if (response.status === 200) {
+      user.value.role = response.data.role;
+      user.value.isAdmin = response.data.role === 'admin';
+      user.value.isViewerOnly = response.data.role === 'especialista';
+      console.log('Datos del usuario obtenidos correctamente.');
+    } else {
+      console.error(
+        `Error al obtener los datos del usuario: Estado ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+  }
+};
 async function fetchSolicitudes() {
   isLoading.value = true;
   try {
     const response = await api.get('api/Solicitudes/');
     rows.value = response.data;
-    console.log(response);
   } catch (error) {
     console.error('Error al obtener las solicitudes:', error);
   } finally {
     isLoading.value = false;
+    fetchUserData();
   }
 }
 
@@ -378,6 +433,7 @@ function eliminar(row: SolicitudType) {
     title: 'Eliminar Solicitud',
     message: '¿Estás seguro de eliminar esta solicitud?',
     cancel: true,
+
     persistent: true,
   }).onOk(async () => {
     isLoading.value = true;
