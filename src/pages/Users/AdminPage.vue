@@ -60,39 +60,61 @@
       </template>
     </q-table>
     <!-- Dialog for editing user details -->
-    <q-dialog v-model="editDialogOpen">
-      <q-card style="width: 400px">
+    <!-- Diálogo de edición -->
+    <q-dialog v-model="editDialogOpen" persistent>
+      <q-card style="min-width: 350px">
         <q-card-section>
-          <div class="text-h6">Editar Usuario</div>
+          <div class="text-h6">Editar Solicitud</div>
         </q-card-section>
 
-        <q-card-section>
-          <q-select
-            v-model="editForm.role"
-            label="Cargo"
-            outlined
-            dense
-            emit-value
-            map-options
-            :options="['admin', 'especialista', 'invitado']"
-          />
-          <q-input
-            type="password"
-            autogrow
-            v-model="editForm.password"
-            label="Nueva Contraseña"
-          />
-        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-form @submit="saveEditUser()" class="q-gutter-md">
+            <div class="column justify-end q-gutter-md">
+              <q-select
+                outlined
+                dense
+                v-model="editForm.role"
+                label="Rol del Usuario *"
+                emit-value
+                map-options
+                :options="[
+                  { label: 'Administrador', value: 'admin' },
+                  { label: 'Especialista', value: 'especialista' },
+                  { label: 'Invitado', value: 'invitado' },
+                ]"
+              />
+              <q-input
+                outlined
+                dense
+                v-model="editForm.password"
+                label="Nueva Contraseña *"
+                placeholder="Introduce la contraseña"
+                :type="isPwd ? 'password' : 'text'"
+              >
+              </q-input>
+            </div>
+            <q-separator class="q-my-lg" />
 
-        <q-card-actions align="right">
-          <q-btn rounded label="Cancelar" v-close-popup />
-          <q-btn
-            rounded
-            color="primary"
-            label="Guardar"
-            @click="saveEditUser"
-          />
-        </q-card-actions>
+            <!-- BOTONES -->
+            <div class="row justify-end q-gutter-md">
+              <q-btn
+                v-close-popup
+                label="Cancelar"
+                color="black"
+                dense
+                size="sm"
+                class="text-color"
+              />
+              <q-btn
+                class="text-color"
+                type="submit"
+                label="Guardar"
+                dense
+                size="sm"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
       </q-card>
     </q-dialog>
   </div>
@@ -100,13 +122,16 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
 import { useQuasar } from 'quasar';
+
 import { api } from 'src/boot/axios';
 import ToolBar from 'src/components/ToolBar.vue';
 
 const $q = useQuasar();
 const search = ref('');
+
 const users = ref<UsersType[]>([]);
 const isLoading = ref(true);
+const isPwd = ref(true);
 
 type UsersType = {
   id: string;
@@ -115,6 +140,7 @@ type UsersType = {
   password: string;
   format?: (value: string) => string;
 };
+
 const columns = [
   {
     name: 'email',
@@ -126,7 +152,7 @@ const columns = [
   },
   {
     name: 'role',
-    label: 'Rol',
+    label: 'Cargo',
     field: 'role',
     align: 'left',
 

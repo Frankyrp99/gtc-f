@@ -19,7 +19,7 @@
                 <q-icon name="login" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Iniciar Sesión</q-item-label>
+                <q-item-label>Cerrar Sesión</q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-if="user.isAdmin" clickable v-close-popup to="/Admin">

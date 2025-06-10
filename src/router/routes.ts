@@ -63,7 +63,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'NewRegistro',
+        name: 'NewRegistroUser',
         component: () => import('src/pages/Users/CreateUserPage.vue'),
       },
     ],

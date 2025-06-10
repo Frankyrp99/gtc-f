@@ -1,84 +1,99 @@
 <template>
-  <div
-    class="row justify-around"
-    style="margin-top: 30px; margin-bottom: 30px; margin-left: 20px"
-  >
-    <div>
-      <p class="text-bold text-body1">Nuevo Usuario</p>
-      <p class="text-bold text-body2" style="color: grey">
-        Introduce los datos del usuario
-      </p>
+  <q-page class="q-pa-sm">
+    <div class="bread">
+      <q-breadcrumbs align="left">
+        <q-breadcrumbs-el icon="home" class="text-primary" to="/" />
+        <q-breadcrumbs-el label="Nuevo Usuario" class="text-bold" />
+      </q-breadcrumbs>
     </div>
-    <q-form @submit="onSubmit" id="form">
-      <div class="q-gutter-md column justify-center items-center">
-        <div>
-          <div><p class="text-bold text-body2">Correo Electrónico</p></div>
 
-          <q-input
-            style="width: 250px"
-            autogrow
-            outlined
-            dense
-            class="form-item"
-            v-model="form.email"
-            label="Introduce el correo electrónico"
-            :rules="email_Rules"
-          />
-        </div>
-        <div>
-          <div><p class="text-bold text-body2">Contraseña</p></div>
-          <q-input
-            style="width: 250px"
-            outlined
-            dense
-            v-model="form.password"
-            label="Introduce la contraseña"
-            :rules="password_Rules"
-          />
-        </div>
-        <div>
-          <div><p class="text-bold text-body2">Rol del Usuario</p></div>
-          <q-select
-            v-model="form.role"
-            label="Cargo"
-            outlined
-            dense
-            emit-value
-            map-options
-            :options="['admin', 'especialista', 'invitado']"
-          />
-        </div>
+    <div class="form-container">
+      <div class="form-header">
+        <p class="text-bold text-h6">Nuevo Usuario</p>
+        <p class="text-caption text-grey-7">Introduce los datos del usuario</p>
       </div>
-      <q-separator inset class="container" />
-      <div class="row justify-end items-center">
-        <q-btn
-          rounded
-          size="sm"
-          label="Volver"
-          class="form-item text-weight-bolder"
-          color="primary"
-          style="margin-top: 20px; margin-bottom: 20px; margin-right: 10px"
-          @click="goBack"
-        />
-        <q-btn
-          rounded
-          size="sm"
-          label="Guardar"
-          type="submit"
-          class="form-item text-weight-bolder"
-          color="primary"
-          style="margin-top: 20px; margin-bottom: 20px"
-        />
-      </div>
-    </q-form>
-  </div>
+
+      <q-form @submit="onSubmit" class="form-content">
+        <!-- SECCIÓN: DATOS DEL USUARIO -->
+        <div class="form-section">
+          <p class="section-title">Datos del Usuario</p>
+          <div class="row q-col-gutter-md">
+            <div class="col-md-6 col-xs-12">
+              <q-input
+                outlined
+                dense
+                v-model="form.email"
+                label="Correo Electrónico *"
+                placeholder="Introduce el correo electrónico"
+                :rules="email_Rules"
+              />
+            </div>
+            <div class="col-md-6 col-xs-12">
+              <q-input
+                outlined
+                dense
+                v-model="form.password"
+                label="Contraseña *"
+                placeholder="Introduce la contraseña"
+                :type="isPwd ? 'password' : 'text'"
+                :rules="password_Rules"
+              >
+              </q-input>
+            </div>
+          </div>
+          <div class="row q-col-gutter-md q-mt-sm">
+            <div class="col-md-6 col-xs-12">
+              <q-select
+                outlined
+                dense
+                v-model="form.role"
+                label="Rol del Usuario *"
+                emit-value
+                map-options
+                :options="[
+                  { label: 'Administrador', value: 'admin' },
+                  { label: 'Especialista', value: 'especialista' },
+                  { label: 'Invitado', value: 'invitado' },
+                ]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <q-separator class="q-my-lg" />
+
+        <!-- BOTONES -->
+        <div class="form-actions">
+          <q-btn
+            outline
+            rounded
+            label="Volver"
+            class="q-mr-sm"
+            size="sm"
+            @click="goBack"
+          />
+          <q-btn
+            rounded
+            label="Guardar"
+            type="submit"
+            color="black"
+            size="sm"
+          />
+        </div>
+      </q-form>
+    </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { useQuasar } from 'quasar';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
+import { useQuasar } from 'quasar';
+
+const router = useRouter();
+const $q = useQuasar();
+const isPwd = ref(true);
 
 interface Form {
   email: string;
@@ -92,11 +107,10 @@ const form = reactive<Form>({
   role: '',
 });
 
-const $q = useQuasar();
-const router = useRouter();
 const goBack = () => {
   router.back();
 };
+
 const email_Rules: Rule[] = [
   (v) => !!v || 'El Email es requerido',
   (v) =>
@@ -104,10 +118,6 @@ const email_Rules: Rule[] = [
     'El Email no es válido',
 ];
 const password_Rules: Rule[] = [(v) => !!v || 'La Contraseña es requerida'];
-
-//metodos
-
-//watchers
 
 async function onSubmit() {
   if (!form.email || !form.password) {
@@ -165,3 +175,45 @@ async function onSubmit() {
   }
 }
 </script>
+
+<style scoped>
+.form-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.form-content {
+  padding: 15px;
+}
+
+.form-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+</style>
