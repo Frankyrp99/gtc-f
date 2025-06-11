@@ -15,7 +15,7 @@
         </p>
       </div>
 
-      <q-form @submit="onSubmit" class="form-content">
+      <q-form @submit="onSubmit" ref="formRef" class="form-content">
         <!-- SECCIÓN 1: DATOS DE LA SOLICITUD -->
         <div class="form-section">
           <p class="section-title">Datos de la Solicitud</p>
@@ -28,6 +28,7 @@
                 label="Número de Orden *"
                 placeholder="Ej: N001"
                 required
+                :rules="[requiredRule, alphanumericRule]"
               />
             </div>
             <div class="col-md-4 col-sm-6 col-xs-12">
@@ -38,6 +39,7 @@
                 label="Número de Certificado *"
                 placeholder="Ej: C001"
                 required
+                :rules="[requiredRule, alphanumericRule]"
               />
             </div>
             <div class="col-md-4 col-sm-6 col-xs-12">
@@ -47,6 +49,7 @@
                 v-model="form.fecha_entrada"
                 label="Fecha de Entrada"
                 placeholder="Ej: 2023-05-15"
+                :rules="[dateFormatRule]"
               >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
@@ -76,6 +79,7 @@
                 label="Nombre y Apellidos *"
                 placeholder="Ej: Juan Pérez García"
                 required
+                :rules="[requiredRule]"
               />
             </div>
             <div class="col-md-6 col-xs-12">
@@ -86,6 +90,7 @@
                 label="Tipo de Persona *"
                 :options="['Natural', 'Jurídica']"
                 required
+                :rules="[requiredRule]"
               />
             </div>
           </div>
@@ -98,6 +103,7 @@
                 label="Dirección Completa *"
                 placeholder="Introduce tu dirección completa"
                 required
+                :rules="[requiredRule]"
               />
             </div>
           </div>
@@ -118,6 +124,7 @@
                   'Punta Alegre',
                 ]"
                 required
+                :rules="[requiredRule]"
               />
             </div>
           </div>
@@ -135,6 +142,7 @@
                 label="Personal Encargado *"
                 placeholder="Ej: Tc. Ana Gómez"
                 required
+                :rules="[requiredRule]"
               />
             </div>
             <div class="col-md-4 col-sm-6 col-xs-12">
@@ -150,6 +158,7 @@
                   'Cancelado',
                 ]"
                 required
+                :rules="[requiredRule]"
               />
             </div>
             <div class="col-md-4 col-sm-6 col-xs-12" v-if="showFechaEntrega">
@@ -159,6 +168,7 @@
                 v-model="form.fecha_entrega"
                 label="Fecha de Entrega"
                 placeholder="Ej: 2023-05-15"
+                :rules="[fechaEntregaRule, dateFormatRule]"
               >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
@@ -202,13 +212,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, computed } from 'vue';
+import { reactive, watch, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
 
 const router = useRouter();
 const $q = useQuasar();
+const formRef = ref();
 
 interface Form {
   numero_orden?: string;
@@ -238,6 +249,21 @@ const form: Form = reactive({
   tiempo_proceso: '0',
 });
 
+// Reglas de validación
+const requiredRule = (val: string) => !!val || 'Campo obligatorio';
+const dateFormatRule = (val: string) =>
+  !val || /^\d{4}-\d{2}-\d{2}$/.test(val) || 'Formato YYYY-MM-DD';
+const alphanumericRule = (val: string) =>
+  !val || /^[0-9\s]+$/.test(val) || 'Solo  números';
+
+// Regla especial para fecha de entrega
+const fechaEntregaRule = (val: string) => {
+  if (showFechaEntrega.value && !val) {
+    return 'Campo obligatorio para este estado';
+  }
+  return true;
+};
+
 const showFechaEntrega = computed(() => {
   return form.estado === 'Entregado' || form.estado === 'Cancelado';
 });
@@ -262,6 +288,16 @@ watch(
   }
 );
 function onSubmit() {
+  // Validar el formulario antes de enviar
+  const valid = formRef.value.validate();
+  if (!valid) {
+    $q.notify({
+      type: 'negative',
+      message: 'Por favor, complete los campos requeridos',
+      position: 'bottom-right',
+    });
+    return;
+  }
   $q.loading.show();
 
   api

@@ -49,6 +49,12 @@
               :props="props"
               @mouseover="showTooltip($event, col.name, props.row[col.field])"
               @mouseout="hideTooltip"
+              :class="{
+                'estado-entregado':
+                  col.name === 'Estado' && col.value === 'Entregado',
+                'estado-cancelado':
+                  col.name === 'Estado' && col.value === 'Cancelado',
+              }"
             >
               {{ col.value }}
             </q-td>
@@ -77,7 +83,7 @@
         </template>
       </q-table>
 
-      <!-- Diálogo de edición -->
+      <!-- Diálogo de edición actualizado -->
       <q-dialog v-model="editDialogOpen" persistent @hide="selectedRow = null">
         <q-card style="min-width: 350px" v-if="selectedRow">
           <q-card-section>
@@ -85,130 +91,161 @@
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            <q-form @submit="onUpdateSolicitud" class="q-gutter-md">
-              <q-input
-                v-model="selectedRow.numero_orden"
-                label="Número de Orden"
-                outlined
-                dense
-              />
-
-              <q-input
-                v-model="selectedRow.numero_certificado"
-                label="Número de Certificado"
-                outlined
-                dense
-              />
-
-              <q-input
-                v-model="selectedRow.nombre_apellidos"
-                label="Nombre y Apellidos"
-                outlined
-                dense
-              />
-
-              <q-input
-                v-model="selectedRow.direccion"
-                label="Dirección"
-                outlined
-                dense
-              />
-
-              <q-input
-                v-model="selectedRow.fecha_entrada"
-                label="Fecha de Entrada"
-                outlined
-                dense
-                ><template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
+            <q-form
+              ref="editFormRef"
+              @submit="onUpdateSolicitud"
+              class="q-gutter-md"
+            >
+              <!-- SECCIÓN 1: DATOS DE LA SOLICITUD -->
+              <div class="form-section">
+                <p class="section-title">Datos de la Solicitud</p>
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.numero_orden"
+                      label="Número de Orden *"
+                      outlined
+                      dense
+                      :rules="[requiredRule, alphanumericRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.numero_certificado"
+                      label="Número de Certificado *"
+                      outlined
+                      dense
+                      :rules="[requiredRule, alphanumericRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.fecha_entrada"
+                      label="Fecha de Entrada"
+                      outlined
+                      dense
+                      :rules="[dateFormatRule]"
                     >
-                      <q-date
-                        color="black"
-                        v-model="selectedRow.fecha_entrada"
-                        mask="YYYY-MM-DD"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Cerrar" color="primary" />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover>
+                            <q-date
+                              color="black"
+                              v-model="selectedRow.fecha_entrada"
+                              mask="YYYY-MM-DD"
+                            />
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                </div>
+              </div>
 
-              <q-input
-                v-model="selectedRow.personal_atencion"
-                label="Personal Encargado"
-                outlined
-                dense
-              />
+              <!-- SECCIÓN 2: DATOS PERSONALES -->
+              <div class="form-section">
+                <p class="section-title">Datos Personales</p>
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.nombre_apellidos"
+                      label="Nombre y Apellidos *"
+                      outlined
+                      dense
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-select
+                      v-model="selectedRow.persona"
+                      label="Tipo de Persona *"
+                      :options="['Natural', 'Jurídica']"
+                      outlined
+                      dense
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.direccion"
+                      label="Dirección Completa *"
+                      outlined
+                      dense
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-select
+                      outlined
+                      dense
+                      v-model="selectedRow.asentamiento"
+                      label="Asentamiento *"
+                      :options="[
+                        'Nuevitas',
+                        'San Miguel de Nuevitas',
+                        'Playa Santa Lucía',
+                        'Camalote',
+                        'Pastelillo',
+                        'La Jíbara',
+                        'Punta Alegre',
+                      ]"
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                </div>
+              </div>
 
-              <q-select
-                v-model="selectedRow.estado"
-                label="Estado"
-                outlined
-                dense
-                emit-value
-                map-options
-                :options="['En Proceso', 'Cancelado', 'Entregado']"
-              />
-
-              <q-select
-                outlined
-                dense
-                v-model="selectedRow.asentamiento"
-                label="Asentamiento *"
-                :options="[
-                  'Nuevitas',
-                  'San Miguel de Nuevitas',
-                  'Playa Santa Lucía',
-                  'Camalote',
-                  'Pastelillo',
-                  'La Jíbara',
-                  'Punta Alegre',
-                ]"
-                required
-              />
-
-              <q-select
-                v-model="selectedRow.persona"
-                label="Persona"
-                outlined
-                dense
-                emit-value
-                map-options
-                :options="['Natural', 'Jurídica']"
-              />
-
-              <q-input
-                v-model="selectedRow.fecha_entrega"
-                label="Fecha Entrega"
-                outlined
-                dense
-                ><template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
+              <!-- SECCIÓN 3: PROCESAMIENTO -->
+              <div class="form-section">
+                <p class="section-title">Procesamiento</p>
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
+                    <q-input
+                      v-model="selectedRow.personal_atencion"
+                      label="Personal Encargado *"
+                      outlined
+                      dense
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <q-select
+                      v-model="selectedRow.estado"
+                      label="Estado *"
+                      :options="[
+                        'En Proceso',
+                        'Para Imprimir',
+                        'Entregado',
+                        'Cancelado',
+                      ]"
+                      outlined
+                      dense
+                      :rules="[requiredRule]"
+                    />
+                  </div>
+                  <div class="col-12" v-if="showFechaEntregaEdit">
+                    <q-input
+                      v-model="selectedRow.fecha_entrega"
+                      label="Fecha de Entrega"
+                      outlined
+                      dense
+                      :rules="[fechaEntregaRuleEdit, dateFormatRule]"
                     >
-                      <q-date
-                        color="black"
-                        v-model="selectedRow.fecha_entrega"
-                        mask="YYYY-MM-DD"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Cerrar" color="primary" />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover>
+                            <q-date
+                              color="black"
+                              v-model="selectedRow.fecha_entrega"
+                              mask="YYYY-MM-DD"
+                            />
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                </div>
+              </div>
 
               <div class="row justify-end q-gutter-md">
                 <q-btn
@@ -245,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { api } from 'src/boot/axios';
 
@@ -275,6 +312,7 @@ const showingTooltip = ref(false);
 const tooltipLeft = ref(0);
 const tooltipTop = ref(0);
 const tooltipContent = ref('');
+const editFormRef = ref();
 
 const columns = [
   {
@@ -370,6 +408,29 @@ const columns = [
   },
 ];
 
+// Reglas de validación
+const requiredRule = (val: string) => !!val || 'Campo obligatorio';
+const dateFormatRule = (val: string) =>
+  !val || /^\d{4}-\d{2}-\d{2}$/.test(val) || 'Formato YYYY-MM-DD';
+const alphanumericRule = (val: string) =>
+  !val || /^[0-9\s]+$/.test(val) || 'Solo  números';
+
+// Mostrar fecha de entrega condicionalmente
+const showFechaEntregaEdit = computed(() => {
+  return (
+    selectedRow.value?.estado === 'Entregado' ||
+    selectedRow.value?.estado === 'Cancelado'
+  );
+});
+
+// Regla especial para fecha de entrega
+const fechaEntregaRuleEdit = (val: string) => {
+  if (showFechaEntregaEdit.value && !val) {
+    return 'Campo obligatorio para este estado';
+  }
+  return true;
+};
+
 function showTooltip(event: MouseEvent, fieldName: string, fieldValue: string) {
   tooltipLeft.value = event.clientX;
   tooltipTop.value = event.clientY;
@@ -459,6 +520,15 @@ function eliminar(row: SolicitudType) {
 }
 
 async function onUpdateSolicitud() {
+  const valid = await editFormRef.value.validate();
+  if (!valid) {
+    $q.notify({
+      type: 'negative',
+      message: 'Por favor, complete los campos requeridos correctamente',
+      position: 'bottom-right',
+    });
+    return;
+  }
   isLoading.value = true;
   try {
     if (!selectedRow.value) {
@@ -511,6 +581,33 @@ onMounted(async () => {
   position: relative;
 }
 
+.form-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.estado-entregado {
+  background-color: #c8e6c9; /* Verde claro */
+  font-weight: bold;
+  color: #1b5e20; /* Texto verde oscuro */
+}
+
+.estado-cancelado {
+  background-color: #ffcdd2; /* Rojo claro */
+  font-weight: bold;
+  color: #b71c1c; /* Texto rojo oscuro */
+}
 .tooltip {
   position: fixed;
   background-color: rgba(255, 255, 255, 0.95);
