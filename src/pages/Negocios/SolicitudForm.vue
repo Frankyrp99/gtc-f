@@ -51,7 +51,11 @@
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover>
-                      <q-date color="black" v-model="form.fecha_entrada" mask="YYYY-MM-DD" />
+                      <q-date
+                        color="black"
+                        v-model="form.fecha_entrada"
+                        mask="YYYY-MM-DD"
+                      />
                     </q-popup-proxy>
                   </q-icon>
                 </template>
@@ -111,7 +115,7 @@
                   'Camalote',
                   'Pastelillo',
                   'La Jíbara',
-                  'Punta Alegre'
+                  'Punta Alegre',
                 ]"
                 required
               />
@@ -148,7 +152,7 @@
                 required
               />
             </div>
-            <div class="col-md-4 col-sm-6 col-xs-12">
+            <div class="col-md-4 col-sm-6 col-xs-12" v-if="showFechaEntrega">
               <q-input
                 outlined
                 dense
@@ -159,7 +163,11 @@
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover>
-                      <q-date color="black" v-model="form.fecha_entrega" mask="YYYY-MM-DD" />
+                      <q-date
+                        color="black"
+                        v-model="form.fecha_entrega"
+                        mask="YYYY-MM-DD"
+                      />
                     </q-popup-proxy>
                   </q-icon>
                 </template>
@@ -177,7 +185,6 @@
             rounded
             label="Volver"
             class="q-mr-sm"
-
             size="sm"
             @click="$router.back()"
           />
@@ -195,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { reactive, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
@@ -231,6 +238,10 @@ const form: Form = reactive({
   tiempo_proceso: '0',
 });
 
+const showFechaEntrega = computed(() => {
+  return form.estado === 'Entregado' || form.estado === 'Cancelado';
+});
+
 watch(
   () => form.fecha_entrega,
   (newValue) => {
@@ -241,6 +252,15 @@ watch(
   { immediate: true }
 );
 
+watch(
+  () => form.estado,
+  (newEstado) => {
+    // Resetear la fecha si cambia el estado a uno no requerido
+    if (newEstado !== 'Entregado' && newEstado !== 'Cancelado') {
+      form.fecha_entrega = '';
+    }
+  }
+);
 function onSubmit() {
   $q.loading.show();
 
