@@ -14,7 +14,7 @@
           class="q-mr-sm"
         >
           <q-list>
-            <q-item clickable v-close-popup to="/">
+            <q-item clickable v-close-popup @click="logout">
               <q-item-section avatar>
                 <q-icon name="login" />
               </q-item-section>
@@ -55,7 +55,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { api } from 'src/boot/axios';
+import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 
+const $q = useQuasar();
+const router = useRouter();
 const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false });
 
 const fetchUserData = async () => {
@@ -84,6 +88,25 @@ const fetchUserData = async () => {
   } catch (error) {
     console.error('Error al obtener los datos del usuario:', error);
   }
+};
+
+// Función para cerrar sesión
+const logout = () => {
+  // 1. Eliminar token de autenticación
+  localStorage.removeItem('authToken');
+
+  // 2. Mostrar notificación
+  $q.notify({
+    type: 'positive',
+    message: 'Sesión cerrada correctamente',
+    icon: 'check',
+    position: 'top',
+  });
+
+  // 3. Redirigir al login después de un breve retraso
+  setTimeout(() => {
+    router.push('/');
+  }, 1000);
 };
 
 onMounted(fetchUserData);
