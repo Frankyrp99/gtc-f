@@ -181,13 +181,13 @@
                       v-model="selectedRow.asentamiento"
                       label="Asentamiento *"
                       :options="[
-                        'Nuevitas',
+                        'Los Micros',
                         'San Miguel de Nuevitas',
                         'Playa Santa Lucía',
                         'Camalote',
-                        'Pastelillo',
-                        'La Jíbara',
-                        'Punta Alegre',
+                        'Centro Histórico',
+                        'Número 1 Tarafa',
+                        'Zona Industrial',
                       ]"
                       :rules="[requiredRule]"
                     />
