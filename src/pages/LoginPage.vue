@@ -3,10 +3,10 @@
     <q-card class="rounded-card login-card">
       <q-card-section class="text-center q-pt-lg">
         <img
-          src="/src/assets/SabinalLogin.png"
+          src="/public/LoginLogo.png"
           alt="Logo de la aplicación"
           class="centered-image"
-          width="150px"
+          width="280px"
           fit="cover"
         />
       </q-card-section>

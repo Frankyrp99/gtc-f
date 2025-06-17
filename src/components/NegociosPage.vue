@@ -49,12 +49,14 @@
               :props="props"
               @mouseover="showTooltip($event, col.name, props.row[col.field])"
               @mouseout="hideTooltip"
+              
               :class="{
                 'estado-entregado':
                   col.name === 'Estado' && col.value === 'Entregado',
                 'estado-cancelado':
                   col.name === 'Estado' && col.value === 'Cancelado',
               }"
+
             >
               {{ col.value }}
             </q-td>
