@@ -3,7 +3,7 @@
     <q-card class="rounded-card login-card">
       <q-card-section class="text-center q-pt-lg">
         <img
-          src="/public/LoginLogo.png"
+          src="/src/assets/LoginLogo.png"
           alt="Logo de la aplicación"
           class="centered-image"
           width="280px"
