@@ -9,6 +9,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'index',
         component: () => import('pages/IndexPage.vue'),
+        meta: { requiresAuth: true }
       },
     ],
   },
@@ -31,6 +32,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'about',
         component: () => import('src/pages/AboutPage.vue'),
+        meta: { requiresAuth: true }
       },
     ],
   },
@@ -42,6 +44,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Solicitudes',
         component: () => import('src/pages/Users/AdminPage.vue'),
+        meta: { requiresAuth: true }
       },
     ],
   },
@@ -54,6 +57,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'NewRegistro',
         component: () => import('src/pages/Negocios/SolicitudForm.vue'),
+        meta: { requiresAuth: true }
       },
     ],
   },
@@ -65,6 +69,32 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'NewRegistroUser',
         component: () => import('src/pages/Users/CreateUserPage.vue'),
+        meta: { requiresAuth: true }
+      },
+    ],
+  },
+  {
+    path: '/Gestionar Entidad',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'gestionentiti',
+        component: () => import('src/pages/Negocios/GestionOpcionesPage.vue'),
+        meta: { requiresAuth: true }
+      },
+    ],
+  },
+  {
+    path: '/entidades',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'entidades',
+        component: () => import('src/pages/Entidades/EntidadesPage.vue'),
+        meta: { requiresAuth: true }
+
       },
     ],
   },

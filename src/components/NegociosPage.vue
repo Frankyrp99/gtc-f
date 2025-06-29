@@ -22,7 +22,7 @@
         <template v-slot:top-right>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="user.isViewerOnly || user.isAdmin"
+
               label="Crear Registro"
               color="black"
               size="sm"
@@ -49,7 +49,7 @@
               :props="props"
               @mouseover="showTooltip($event, col.name, props.row[col.field])"
               @mouseout="hideTooltip"
-              
+
               :class="{
                 'estado-entregado':
                   col.name === 'Estado' && col.value === 'Entregado',
@@ -62,7 +62,7 @@
             </q-td>
             <q-td auto-width class="q-gutter-sm">
               <q-btn
-                v-if="user.isViewerOnly || user.isAdmin"
+                
                 color="positive"
                 icon="edit"
                 size="sm"
@@ -71,7 +71,7 @@
                 @click="editRow(props.row)"
               />
               <q-btn
-                v-if="user.isViewerOnly || user.isAdmin"
+
                 color="negative"
                 icon="delete"
                 size="sm"
@@ -463,7 +463,7 @@ const fetchUserData = async () => {
       user.value.role = response.data.role;
       user.value.isAdmin = response.data.role === 'admin';
       user.value.isViewerOnly = response.data.role === 'especialista';
-      console.log('Datos del usuario obtenidos correctamente.');
+
     } else {
       console.error(
         `Error al obtener los datos del usuario: Estado ${response.status}`
@@ -476,8 +476,16 @@ const fetchUserData = async () => {
 async function fetchSolicitudes() {
   isLoading.value = true;
   try {
-    const response = await api.get('api/Solicitudes/');
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+    const response = await api.get('api/Solicitudes/',config);
     rows.value = response.data;
+
   } catch (error) {
     console.error('Error al obtener las solicitudes:', error);
   } finally {

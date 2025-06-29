@@ -18,6 +18,17 @@
       <template v-slot:top-right>
         <div class="row q-gutter-md">
           <q-btn
+            v-if="user.isAdmin"
+            color="black"
+            icon="add"
+            size="sm"
+            align="left"
+            dense
+            label="Gestionar Entidades"
+            class="text-bold"
+            to="/entidades"
+          />
+          <q-btn
             color="black"
             icon="add"
             size="sm"
@@ -70,7 +81,15 @@
         <q-card-section class="q-pt-none">
           <q-form @submit="saveEditUser()" class="q-gutter-md">
             <div class="column justify-end q-gutter-md">
+              <q-input
+                outlined
+                dense
+                v-model="editForm.email"
+                label="Email *"
+                readonly
+              />
               <q-select
+                v-if="user.isAdmin"
                 outlined
                 dense
                 v-model="editForm.role"
@@ -78,10 +97,29 @@
                 emit-value
                 map-options
                 :options="[
-                  { label: 'Administrador', value: 'admin' },
+                  { label: 'Director', value: 'director' },
                   { label: 'Especialista', value: 'especialista' },
-                  { label: 'Invitado', value: 'invitado' },
                 ]"
+              />
+              <q-select
+                v-if="user.isAdmin"
+                outlined
+                dense
+                v-model="editForm.entidad"
+                label="Entidad"
+                emit-value
+                map-options
+                :options="entidadesOptions"
+                option-value="value"
+                option-label="label"
+              />
+              <q-input
+                v-else
+                outlined
+                dense
+                readonly
+                label="Rol del Usuario *"
+                :model-value="'Especialista'"
               />
               <q-input
                 outlined
@@ -120,59 +158,94 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { useQuasar } from 'quasar';
-
 import { api } from 'src/boot/axios';
 import ToolBar from 'src/components/ToolBar.vue';
 
 const $q = useQuasar();
 const search = ref('');
-
 const users = ref<UsersType[]>([]);
+
 const isLoading = ref(true);
 const isPwd = ref(true);
+const user = ref({
+  role: 'especialista',
+  isAdmin: false,
+  isDirector: false,
+  entidad: null as { id: number } | null,
+});
+const entidades = ref<EntidadType[]>([]);
 
 type UsersType = {
   id: string;
   email: string;
   role: string;
-  password: string;
-  format?: (value: string) => string;
+  entidad?: {
+    id: number;
+    nombre: string;
+  };
 };
 
-const columns = [
-  {
-    name: 'email',
-    label: 'Email',
-    field: 'email',
-    sortable: true,
-    filter: true,
-    align: 'left',
-  },
-  {
-    name: 'role',
-    label: 'Cargo',
-    field: 'role',
-    align: 'left',
-
-    sortable: true,
-    filter: true,
-    format: (value: string) => {
-      if (value === 'admin') {
-        return 'Administrador';
-      } else if (value === 'especialista') {
-        return 'Especialista';
-      } else if (value === 'invitado') {
-        return 'Invitado';
-      } else {
-        return value;
-      }
+const columns = computed(() => {
+  const baseColumns = [
+    {
+      name: 'email',
+      label: 'Email',
+      field: 'email',
+      sortable: true,
+      filter: true,
+      align: 'left',
     },
-  },
-];
+    {
+      name: 'role',
+      label: 'Cargo',
+      field: 'role',
+      align: 'left',
+      sortable: true,
+      filter: true,
+      format: (value: string) => {
+        if (value === 'admin') return 'Administrador';
+        if (value === 'especialista') return 'Especialista';
+        if (value === 'director') return 'Director';
+        return value;
+      },
+    },
+  ];
 
-onMounted(async () => {
+  if (user.value.isAdmin) {
+    baseColumns.push({
+      name: 'entidad',
+      label: 'Entidad',
+      field: (row: UsersType) => {
+        if (row.entidad) {
+          const entidad = entidades.value.find((e) => e.id === row.entidad);
+          return entidad ? entidad.nombre : 'Sin entidad';
+        }
+        return 'Sin entidad';
+      },
+      align: 'left',
+      sortable: true,
+      filter: true,
+    });
+  }
+
+  return baseColumns;
+});
+
+type EntidadType = {
+  id: number;
+  nombre: string;
+};
+
+const entidadesOptions = computed(() => {
+  return entidades.value.map((ent) => ({
+    label: ent.nombre,
+    value: ent.id,
+  }));
+});
+
+const fetchCurrentUser = async () => {
   try {
     const authToken = localStorage.getItem('authToken');
     const config = {
@@ -182,32 +255,80 @@ onMounted(async () => {
       },
     };
 
-    const response = await api.get('/api/users/list', config);
+    const response = await api.get('/api/users', config);
+    if (response.status === 200) {
+      user.value = {
+        role: response.data.role,
+        isAdmin: response.data.role === 'admin',
+        isDirector: response.data.role === 'director',
+        entidad: response.data.entidad,
+      };
+    }
+  } catch (error) {
+    console.error('Error al obtener datos del usuario:', error);
+  }
+};
 
+const fetchEntidades = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: { Authorization: `Token ${authToken}` },
+    };
+    const response = await api.get('/api/entidades/', config);
+    entidades.value = response.data;
+  } catch (error) {
+    console.error('Error al obtener entidades:', error);
+  }
+};
+
+const fetchUsers = async () => {
+  try {
+    isLoading.value = true;
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await api.get('/api/users/list', config);
     users.value = response.data || [];
-    console.log(response);
+    console.log(response.data);
   } catch (error) {
     console.error('Error fetching users:', error);
-    users.value = []; // Asegura array vacío en errores
+    users.value = [];
   } finally {
     isLoading.value = false;
   }
+};
+
+onMounted(async () => {
+  await fetchCurrentUser();
+  await fetchUsers();
+  if (user.value.isAdmin) {
+    await fetchEntidades();
+  }
 });
 
+// Diálogo de edición
 const editDialogOpen = ref(false);
 const editForm = reactive({
   id: '',
-
+  email: '',
+  entidad: null as number | null,
   role: '',
   password: '',
-
-  // Agrega más campos según sea necesario
 });
 
 const editUser = (selectedUser: UsersType) => {
   editForm.id = selectedUser.id;
+  editForm.email = selectedUser.email;
   editForm.role = selectedUser.role;
-  editForm.password = selectedUser.password;
+  editForm.password = '';
+  editForm.entidad = selectedUser.entidad?.id || null;
+
   editDialogOpen.value = true;
 };
 
@@ -220,24 +341,48 @@ async function saveEditUser() {
         'Content-Type': 'application/json',
       },
     };
-    await api.put(`/api/users/${editForm.id}/`, editForm, config);
 
-    const index = users.value.findIndex((user) => user.id === editForm.id);
+    // Preparar objeto completo para PUT
+    const userData = {
+      email: editForm.email,
+      role: editForm.role,
+      entidad: editForm.entidad,
+      password: editForm.password || undefined, // Enviar solo si hay contraseña
+    };
+
+    await api.put(`/api/users/${editForm.id}/`, userData, config);
+
+    // Actualizar UI
+    const index = users.value.findIndex((u) => u.id === editForm.id);
     if (index !== -1) {
-      Object.assign(users.value[index], editForm);
+      users.value[index] = {
+        ...users.value[index],
+        role: editForm.role,
+        entidad: entidades.value.find((e) => e.id === editForm.entidad),
+      };
     }
+
     $q.notify({
-      type: 'positive', // Cambiado a positive para indicar éxito
+      type: 'positive',
       message: '¡Usuario Actualizado Correctamente!',
       position: 'top-right',
     });
+
     editDialogOpen.value = false;
-  } catch (error) {
-    console.error('Error updating user:', error);
+  } catch (error: any) {
+    let errorMessage = 'Error al actualizar el usuario';
+    if (error.response?.data) {
+      errorMessage = Object.values(error.response.data).flat().join(', ');
+    }
+    $q.notify({
+      type: 'negative',
+      message: errorMessage,
+      position: 'top-right',
+    });
   }
 }
 
-async function eliminar(user: { id: null }) {
+async function eliminar(selectedUser: { id: string }) {
   try {
     const authToken = localStorage.getItem('authToken');
     const config = {
@@ -246,36 +391,29 @@ async function eliminar(user: { id: null }) {
         'Content-Type': 'application/json',
       },
     };
+
     await $q
       .dialog({
         title: 'Eliminar Usuario',
-        message: '¿Estás seguro de eliminar?',
+        message: '¿Estás seguro de eliminar este usuario?',
         cancel: true,
         persistent: true,
       })
-      .onOk(() => {
-        api
-          .delete(`/api/deleteuser/${user.id}/`, config)
-          .then(() => {
-            console.log('Recurso eliminado con éxito');
-            users.value = users.value.filter((item) => item.id !== user.id);
-            $q.notify({
-              type: 'positive',
-              message: '¡Usuario Eliminado Correctamente!',
-              position: 'top-right',
-            });
-          })
-          .catch((error) => {
-            console.error('Error al eliminar el recurso:', error);
-            $q.notify({
-              type: 'negative',
-              message: 'Hubo un error al eliminar el Usuario.',
-              position: 'top-right',
-            });
-          });
+      .onOk(async () => {
+        await api.delete(`/api/users/${selectedUser.id}/`, config);
+        users.value = users.value.filter((u) => u.id !== selectedUser.id);
+        $q.notify({
+          type: 'positive',
+          message: '¡Usuario Eliminado Correctamente!',
+          position: 'top-right',
+        });
       });
-  } catch (error) {
-    console.error('Error al mostrar el diálogo:', error);
+  } catch (error: any) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error al eliminar el usuario',
+      position: 'top-right',
+    });
   }
 }
 </script>

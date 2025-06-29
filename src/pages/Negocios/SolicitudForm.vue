@@ -114,15 +114,7 @@
                 dense
                 v-model="form.asentamiento"
                 label="Asentamiento *"
-                :options="[
-                 'Los Micros',
-                  'San Miguel de Nuevitas',
-                  'Playa Santa Lucía',
-                  'Camalote',
-                  'Centro Histórico',
-                  'Número 1 Tarafa',
-                  'Zona Industrial'
-                ]"
+                :options="asentamientosOptions"
                 required
                 :rules="[requiredRule]"
               />
@@ -135,12 +127,12 @@
           <p class="section-title">Procesamiento</p>
           <div class="row q-col-gutter-md">
             <div class="col-md-4 col-sm-6 col-xs-12">
-              <q-input
+              <q-select
                 outlined
                 dense
                 v-model="form.personal_atencion"
                 label="Personal Encargado *"
-                placeholder="Ej: Tc. Ana Gómez"
+                :options="personalOptions"
                 required
                 :rules="[requiredRule]"
               />
@@ -212,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, computed, ref } from 'vue';
+import { reactive, watch, computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
@@ -221,7 +213,25 @@ const router = useRouter();
 const $q = useQuasar();
 const formRef = ref();
 
+const asentamientosOptions = ref<string[]>([]);
+const personalOptions = ref<string[]>([]);
+
+const user = ref({
+  id: 0,
+  email: '',
+  role: '',
+  entidad: null as { id: number; nombre: string } | null,
+  opciones_entidad: [] as Array<{ id: number; tipo: string; valor: string }>,
+});
+interface OpcionEntidad {
+  id: number;
+  tipo: string;
+  valor: string;
+}
+
+
 interface Form {
+  entidad?: string;
   numero_orden?: string;
   numero_certificado?: string;
   nombre_apellidos?: string;
@@ -236,6 +246,7 @@ interface Form {
 }
 
 const form: Form = reactive({
+  entidad: '',
   numero_orden: '',
   numero_certificado: '',
   nombre_apellidos: '',
@@ -287,7 +298,62 @@ watch(
     }
   }
 );
-function onSubmit() {
+
+const fetchUserData = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await api.get('/api/users', config);
+
+    if (response.status === 200) {
+      // Asignar todos los datos del usuario directamente
+      Object.assign(user.value, response.data);
+
+      // Procesar las opciones de la entidad
+      processOpcionesEntidad(response.data.opciones_entidad);
+
+      if (response.data.entidad ) {
+        form.entidad = response.data.entidad.toString(); // Convertir a string
+        console.log('Entidad asignada:', form.entidad);
+      }
+
+      console.log('Datos del usuario obtenidos correctamente.', response);
+    } else {
+      console.error(`Error al obtener datos: Estado ${response.status}`);
+    }
+
+
+  } catch (error: unknown) {
+    console.error('Error al obtener datos del usuario:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Error al cargar datos de usuario',
+      position: 'bottom-right',
+    });
+  }
+};
+
+const processOpcionesEntidad = (opciones: OpcionEntidad[]) => {
+  // Filtrar y mapear asentamientos
+  asentamientosOptions.value = opciones
+    .filter((op) => op.tipo === 'ASENTAMIENTO')
+    .map((op) => op.valor);
+
+  // Filtrar y mapear personal
+  personalOptions.value = opciones
+    .filter((op) => op.tipo === 'PERSONAL')
+    .map((op) => op.valor);
+};
+
+
+
+async function onSubmit() {
   // Validar el formulario antes de enviar
   const valid = formRef.value.validate();
   if (!valid) {
@@ -298,31 +364,38 @@ function onSubmit() {
     });
     return;
   }
+
   $q.loading.show();
 
-  api
-    .post('/api/Solicitudes/', form)
-    .then(() => {
-      $q.notify({
-        type: 'positive',
-        message: 'Solicitud enviada con éxito.',
-        position: 'bottom-right',
-      });
-      router.push({ name: 'index' });
-    })
-    .catch((error) => {
+  try {
+    const response = await api.post('/api/Solicitudes/', form);
+    console.log('Formulario enviado:', form);
+
+    $q.notify({
+      type: 'positive',
+      message: 'Solicitud enviada con éxito.',
+      position: 'bottom-right',
+    });
+    router.push({ name: 'index' });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
       $q.notify({
         type: 'negative',
-        message:
-          'Hubo un error al enviar la solicitud. Por favor, inténtalo de nuevo.',
+        message: 'Hubo un error al enviar la solicitud. Por favor, inténtalo de nuevo.',
         position: 'bottom-right',
       });
       console.error('Error al enviar la solicitud:', error);
-    })
-    .finally(() => {
-      $q.loading.hide();
-    });
+    } else {
+      console.error('Error desconocido:', error);
+    }
+  } finally {
+    $q.loading.hide();
+  }
 }
+
+onMounted(async () => {
+  await fetchUserData();
+});
 </script>
 
 <style scoped>

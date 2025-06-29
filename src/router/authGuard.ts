@@ -1,10 +1,5 @@
-import {
-  NavigationGuardNext,
-  RouteLocationNormalized,
-  RouteRecordNormalized
-} from 'vue-router';
+import { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 
-// Extiende la interfaz de metadatos para incluir requiresAuth
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean;
@@ -16,21 +11,23 @@ export default function authGuard(
   from: RouteLocationNormalized,
   next: NavigationGuardNext
 ) {
-  // Verifica si el usuario está autenticado
-  const isAuthenticated = () => {
+  const isAuthenticated = (): boolean => {
     const token = localStorage.getItem('authToken');
-    if (!token) return false;}
+    return !!token; // Convierte a booleano (true si existe token)
+  };
 
-  // Verifica si alguna ruta coincidente requiere autenticación
-  const requiresAuth = to.matched.some(
-    (record: RouteRecordNormalized) => record.meta?.requiresAuth
-  );
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
 
-  if (!isAuthenticated && requiresAuth) {
-    // Redirige al usuario a la página de login
-    next('/');
-  } else {
-    // Permite el acceso a la ruta
+  // Si la ruta requiere autenticación y el usuario NO está logueado
+  if (requiresAuth && !isAuthenticated()) {
+    next('/'); // Redirige al login
+  }
+  // Si el usuario está autenticado y trata de acceder al login, redirige al dashboard
+  else if (to.path === '/' && isAuthenticated()) {
+    next('/Main'); // O la ruta por defecto para usuarios autenticados
+  }
+  // En cualquier otro caso, permite el acceso
+  else {
     next();
   }
 }

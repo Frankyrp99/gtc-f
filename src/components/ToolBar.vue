@@ -22,12 +22,20 @@
                 <q-item-label>Cerrar Sesión</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item v-if="user.isAdmin" clickable v-close-popup to="/Admin">
+            <q-item v-if="user.isAdmin || user.isDirector" clickable v-close-popup to="/Admin">
               <q-item-section avatar>
                 <q-icon name="admin_panel_settings" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>Gestión de Usuarios</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="user.isAdmin || user.isDirector" clickable v-close-popup to="/Gestionar Entidad">
+              <q-item-section avatar>
+                <q-icon name="admin_panel_settings" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Gestión de Entidades </q-item-label>
               </q-item-section>
             </q-item>
 
@@ -60,7 +68,7 @@ import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 const router = useRouter();
-const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false });
+const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false, isDirector:false });
 
 const fetchUserData = async () => {
   try {
@@ -78,6 +86,7 @@ const fetchUserData = async () => {
     if (response.status === 200) {
       user.value.role = response.data.role;
       user.value.isAdmin = response.data.role === 'admin';
+      user.value.isDirector = response.data.role === 'director';
       user.value.isViewerOnly = response.data.role === 'especialista';
       console.log('Datos del usuario obtenidos correctamente.');
     } else {

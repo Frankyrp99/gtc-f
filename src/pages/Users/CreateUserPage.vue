@@ -51,9 +51,9 @@
                 emit-value
                 map-options
                 :options="[
-                  { label: 'Administrador', value: 'admin' },
+                  
                   { label: 'Especialista', value: 'especialista' },
-                  { label: 'Invitado', value: 'invitado' },
+                  { label: 'Director', value: 'director' },
                 ]"
               />
             </div>
@@ -104,7 +104,7 @@ type Rule = (value: string) => boolean | string;
 const form = reactive<Form>({
   email: '',
   password: '',
-  role: '',
+  role: 'especialista', // Valor por defecto
 });
 
 const goBack = () => {
@@ -131,47 +131,46 @@ async function onSubmit() {
 
   try {
     const authToken = localStorage.getItem('authToken');
-
     const config = {
       headers: {
         Authorization: `Token ${authToken}`,
         'Content-Type': 'application/json',
       },
     };
+
     $q.loading.show();
 
-    const response = await api.post('/api/users/list/', form, config);
+     await api.post('/api/users/list/', {
+      email: form.email,
+      password: form.password,
+      role: form.role
+    }, config);
 
-    if (response) {
-      console.log('Formulario enviado con éxito:');
-      $q.notify({
-        type: 'positive',
-        message: '¡Usuario Registrado con Éxito !',
-        position: 'top-right',
-      });
-      $q.loading.hide();
-      router.push('/Admin');
-    } else {
-      $q.loading.hide();
-      $q.notify({
-        type: 'negative',
-        message: 'Hubo un error al enviar el formulario. ',
-        position: 'top-right',
-      });
+    $q.notify({
+      type: 'positive',
+      message: '¡Usuario Registrado con Éxito!',
+      position: 'top-right',
+    });
+
+    router.push('/Admin');
+  } catch (error: any) {
+    let errorMessage = 'Error al crear el usuario';
+
+    if (error.response?.data) {
+      if (error.response.data.email) {
+        errorMessage = error.response.data.email[0];
+      } else if (error.response.data.password) {
+        errorMessage = error.response.data.password[0];
+      }
     }
-  } catch (error) {
-    $q.loading.hide();
-    let errorMessage =
-      'Hubo un error al enviar el formulario. Por favor, inténtalo de nuevo.';
-    if (error) {
-      errorMessage = 'Hubo un error al enviar el formulario: ';
-    }
+
     $q.notify({
       type: 'negative',
       message: errorMessage,
       position: 'top-right',
     });
-    console.error('Error al enviar el formulario:', error);
+  } finally {
+    $q.loading.hide();
   }
 }
 </script>
