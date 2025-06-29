@@ -4,7 +4,9 @@
       <div class="container-global row items-center justify-between">
         <q-toolbar-title class="text-bold q-mt-md">
           Gestión de Trámites Catastrales
+
         </q-toolbar-title>
+
         <q-btn-dropdown
           size="sm"
           color="black"
@@ -22,7 +24,12 @@
                 <q-item-label>Cerrar Sesión</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item v-if="user.isAdmin || user.isDirector" clickable v-close-popup to="/Admin">
+            <q-item
+              v-if="user.isAdmin || user.isDirector"
+              clickable
+              v-close-popup
+              to="/Admin"
+            >
               <q-item-section avatar>
                 <q-icon name="admin_panel_settings" />
               </q-item-section>
@@ -30,7 +37,12 @@
                 <q-item-label>Gestión de Usuarios</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item v-if="user.isAdmin || user.isDirector" clickable v-close-popup to="/Gestionar Entidad">
+            <q-item
+              v-if="user.isAdmin || user.isDirector"
+              clickable
+              v-close-popup
+              to="/Gestionar Entidad"
+            >
               <q-item-section avatar>
                 <q-icon name="admin_panel_settings" />
               </q-item-section>
@@ -68,7 +80,13 @@ import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 const router = useRouter();
-const user = ref({ role: 'invitado', isAdmin: false, isViewerOnly: false, isDirector:false });
+const user = ref({
+  role: 'invitado',
+  isAdmin: false,
+  isViewerOnly: false,
+  isDirector: false,
+  entidad: null as { id: number; nombre: string } | null,
+});
 
 const fetchUserData = async () => {
   try {
@@ -88,6 +106,7 @@ const fetchUserData = async () => {
       user.value.isAdmin = response.data.role === 'admin';
       user.value.isDirector = response.data.role === 'director';
       user.value.isViewerOnly = response.data.role === 'especialista';
+
       console.log('Datos del usuario obtenidos correctamente.');
     } else {
       console.error(
@@ -133,8 +152,14 @@ onMounted(fetchUserData);
     242
   ); /* Color de fondo para que la toolbar sea visible sobre el contenido */
   /* box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /*Añade una sombra para darle más definición */
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+.fixed-toolbar.scrolled {
+  height: 60px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 .container-global {
   width: 100%; /* Usamos un ancho del 100% por defecto */
   max-width: 1600px; /* Limita el ancho máximo a 1600px */

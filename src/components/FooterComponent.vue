@@ -1,23 +1,48 @@
 <template>
-  <div class="footer q-mx-sm q-my-md">
-    <div class="separator"></div>
-    <div class="footer-content">
-      <div class="footer-icons ">
+  <footer class="q-pa-md bg-grey-2 text-dark">
+    <div class="container-global">
+      <div class="row justify-between items-center">
+        <div class="col-md-4 q-pr-md">
+          <div class="text-h6">Información de Contacto</div>
+          <div class="q-mt-sm">
+            <q-icon name="phone" /> +53 55761484<br />
+            <q-icon name="email" /> SGCCSOPORTE@gmail.com
+          </div>
+        </div>
 
-        <div class="social-links row justify-center">
-          <a
-            href="https://t.me/FrankyPro_Tech"
-            target="_blank"
-            rel="noopener noreferrer"
-           label="Contactar por Telegram"
-            class="social-link telegram"
-          >
-            <i class="eva eva-paper-plane-outline"></i>
-          </a>
+        <div class="col-md-4 text-center">
+          <div class="text-bold">
+             Nuestras Redes Sociales
+          </div>
+          <div class="social-links row justify-center q-gutter-md">
+            <a href="https://t.me/FrankyPro_Tech" class="social-link">
+              <q-icon name="telegram" size="lg" color="black" />
+            </a>
+            <a href="https://facebook.com" class="social-link">
+              <q-icon name="facebook" size="lg" color="black" />
+            </a>
+          </div>
+
+        </div>
+
+        <div class="col-md-4 text-right">
+
+          <div>
+            © {{ new Date().getFullYear() }} Todos los Derechos Reservados
+          </div>
+          <div class="q-mt-sm text-caption">
+            <router-link to="/privacy" class="text-dark"
+              >Política de Privacidad</router-link
+            >
+            |
+            <router-link to="/terms" class="text-dark"
+              >Términos de Uso</router-link
+            >
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </footer>
 </template>
 
 <style scoped>
@@ -60,7 +85,7 @@
 }
 
 .telegram {
-  background: linear-gradient(135deg, #2AABEE, #229ED9);
+  background: linear-gradient(135deg, #2aabee, #229ed9);
   box-shadow: 0 4px 15px rgba(42, 171, 238, 0.3);
 }
 
@@ -86,7 +111,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(transparent, rgba(255,255,255,0.1));
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.1));
   transition: bottom 0.3s ease;
 }
 

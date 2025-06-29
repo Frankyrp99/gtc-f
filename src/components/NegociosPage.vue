@@ -14,6 +14,8 @@
         no-data-label="No hay registros disponibles."
         no-results-label="No se encontraron resultados para tu búsqueda."
         :loading="isLoading"
+        selection="multiple"
+        v-model:selected="selectedRows"
       >
         <template v-slot:loading>
           <q-inner-loading showing color="primary" />
@@ -22,7 +24,24 @@
         <template v-slot:top-right>
           <div class="row q-gutter-md">
             <q-btn
-
+              v-if="selectedRows.length > 0"
+              label="Cambiar estado seleccionados"
+              color="black"
+              size="sm"
+              class="text-bold"
+              dense
+              @click="openChangeStateDialog"
+            />
+            <q-btn
+              label="Exportar Excel"
+              color="black"
+              size="sm"
+              icon="file_download"
+              dense
+              class="text-bold"
+              @click="exportToExcel"
+            />
+            <q-btn
               label="Crear Registro"
               color="black"
               size="sm"
@@ -40,29 +59,32 @@
             />
           </div>
         </template>
+        <template v-slot:header-selection="scope">
+          <q-checkbox v-model="scope.selected" />
+        </template>
 
         <template v-slot:body="props">
           <q-tr :props="props">
+            <q-td auto-width>
+              <q-checkbox v-model="props.selected" />
+            </q-td>
             <q-td
               v-for="col in props.cols"
               :key="col.name"
               :props="props"
               @mouseover="showTooltip($event, col.name, props.row[col.field])"
               @mouseout="hideTooltip"
-
               :class="{
                 'estado-entregado':
                   col.name === 'Estado' && col.value === 'Entregado',
                 'estado-cancelado':
                   col.name === 'Estado' && col.value === 'Cancelado',
               }"
-
             >
               {{ col.value }}
             </q-td>
             <q-td auto-width class="q-gutter-sm">
               <q-btn
-                
                 color="positive"
                 icon="edit"
                 size="sm"
@@ -71,7 +93,6 @@
                 @click="editRow(props.row)"
               />
               <q-btn
-
                 color="negative"
                 icon="delete"
                 size="sm"
@@ -84,6 +105,60 @@
           </q-tr>
         </template>
       </q-table>
+
+      <!-- Diálogo para cambiar estado masivo -->
+      <q-dialog v-model="changeStateDialogOpen" persistent>
+        <q-card style="min-width: 350px">
+          <q-card-section>
+            <div class="text-h6">
+              Cambiar Estado ({{ selectedRows.length }} registros)
+            </div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <q-select
+              v-model="newState"
+              label="Nuevo Estado *"
+              :options="[
+                'En Proceso',
+                'Para Imprimir',
+                'Entregado',
+                'Cancelado',
+              ]"
+              outlined
+              dense
+              :rules="[requiredRule]"
+            />
+
+            <div v-if="showNewFechaEntrega" class="q-mt-md">
+              <q-input
+                v-model="newFechaEntrega"
+                label="Fecha de Entrega"
+                outlined
+                dense
+                :rules="[dateFormatRule]"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy cover>
+                      <q-date
+                        color="black"
+                        v-model="newFechaEntrega"
+                        mask="YYYY-MM-DD"
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+          </q-card-section>
+
+          <q-card-actions align="right" class="text-primary">
+            <q-btn flat label="Cancelar" v-close-popup />
+            <q-btn flat label="Guardar" @click="updateMultipleStates" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
 
       <!-- Diálogo de edición actualizado -->
       <q-dialog v-model="editDialogOpen" persistent @hide="selectedRow = null">
@@ -284,9 +359,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { api } from 'src/boot/axios';
+import * as XLSX from 'xlsx';
 
 interface SolicitudType {
   id: number;
@@ -315,8 +391,12 @@ const tooltipLeft = ref(0);
 const tooltipTop = ref(0);
 const tooltipContent = ref('');
 const editFormRef = ref();
-
+const selectedRows = ref<SolicitudType[]>([]);
+const changeStateDialogOpen = ref(false);
+const newState = ref('');
+const newFechaEntrega = ref('');
 const columns = [
+
   {
     name: 'Número Orden',
     label: 'Noº de Orden',
@@ -425,6 +505,11 @@ const showFechaEntregaEdit = computed(() => {
   );
 });
 
+// Computed para mostrar fecha de entrega
+const showNewFechaEntrega = computed(() => {
+  return newState.value === 'Entregado' || newState.value === 'Cancelado';
+});
+
 // Regla especial para fecha de entrega
 const fechaEntregaRuleEdit = (val: string) => {
   if (showFechaEntregaEdit.value && !val) {
@@ -463,7 +548,6 @@ const fetchUserData = async () => {
       user.value.role = response.data.role;
       user.value.isAdmin = response.data.role === 'admin';
       user.value.isViewerOnly = response.data.role === 'especialista';
-
     } else {
       console.error(
         `Error al obtener los datos del usuario: Estado ${response.status}`
@@ -483,14 +567,68 @@ async function fetchSolicitudes() {
         'Content-Type': 'application/json',
       },
     };
-    const response = await api.get('api/Solicitudes/',config);
+    const response = await api.get('api/Solicitudes/', config);
     rows.value = response.data;
-
   } catch (error) {
     console.error('Error al obtener las solicitudes:', error);
   } finally {
     isLoading.value = false;
     fetchUserData();
+  }
+}
+
+// Abrir diálogo de cambio de estado
+function openChangeStateDialog() {
+  newState.value = '';
+  newFechaEntrega.value = '';
+  changeStateDialogOpen.value = true;
+}
+
+// Actualizar múltiples estados
+async function updateMultipleStates() {
+  if (!newState.value) {
+    $q.notify({ type: 'negative', message: 'Seleccione un estado' });
+    return;
+  }
+
+  let fechaEntrega = null;
+  if (showNewFechaEntrega.value) {
+    if (!newFechaEntrega.value) {
+      const today = new Date();
+      fechaEntrega = today.toISOString().split('T')[0];
+    } else {
+      fechaEntrega = newFechaEntrega.value;
+    }
+  }
+
+  isLoading.value = true;
+  try {
+    const promises = selectedRows.value.map((row) => {
+      return api.put(`/api/Solicitudes/${row.id}/`, {
+        ...row,
+        estado: newState.value,
+        fecha_entrega: fechaEntrega,
+      });
+    });
+
+    await Promise.all(promises);
+    await fetchSolicitudes();
+    $q.notify({
+      type: 'positive',
+      message: `${selectedRows.value.length} registros actualizados`,
+      position: 'bottom-right',
+    });
+    selectedRows.value = [];
+    changeStateDialogOpen.value = false;
+  } catch (error) {
+    console.error('Error al actualizar estados:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Error al actualizar registros',
+      position: 'bottom-right',
+    });
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -528,6 +666,79 @@ function eliminar(row: SolicitudType) {
     }
   });
 }
+const exportToExcel = () => {
+  if (rows.value.length === 0) {
+    $q.notify({
+      type: 'warning',
+      message: 'No hay datos para exportar',
+      position: 'top'
+    });
+    return;
+  }
+
+  try {
+    // Preparar los datos para la exportación
+    const data = rows.value.map(row => {
+      return {
+        'Número Orden': row.numero_orden,
+        'Número Certificado': row.numero_certificado,
+        'Nombre y Apellidos': row.nombre_apellidos,
+        'Dirección': row.direccion,
+        'Fecha Entrada': row.fecha_entrada,
+        'Personal Encargado': row.personal_atencion,
+        'Estado': row.estado,
+        'Asentamiento': row.asentamiento,
+        'Persona': row.persona,
+        'Fecha Entrega': row.fecha_entrega,
+        'Tiempo Proceso (días)': row.tiempo_proceso
+      };
+    });
+
+    // Crear hoja de trabajo
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    // Ajustar anchos de columnas
+    const wscols = [
+      { wch: 15 },  // Número Orden
+      { wch: 18 },  // Número Certificado
+      { wch: 30 },  // Nombre y Apellidos
+      { wch: 40 },  // Dirección
+      { wch: 15 },  // Fecha Entrada
+      { wch: 25 },  // Personal Encargado
+      { wch: 15 },  // Estado
+      { wch: 20 },  // Asentamiento
+      { wch: 15 },  // Persona
+      { wch: 15 },  // Fecha Entrega
+      { wch: 20 }   // Tiempo Proceso
+    ];
+    ws['!cols'] = wscols;
+
+    // Crear libro de trabajo
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Solicitudes Catastrales');
+
+    // Generar nombre de archivo con fecha
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileName = `Solicitudes_Catastrales_${dateStr}.xlsx`;
+
+    // Descargar el archivo
+    XLSX.writeFile(wb, fileName);
+
+    $q.notify({
+      type: 'positive',
+      message: 'Exportación completada',
+      position: 'top',
+      icon: 'file_download'
+    });
+  } catch (error) {
+    console.error('Error al exportar a Excel:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Error al exportar los datos',
+      position: 'top'
+    });
+  }
+};
 
 async function onUpdateSolicitud() {
   const valid = await editFormRef.value.validate();
@@ -575,12 +786,23 @@ async function onUpdateSolicitud() {
   }
 }
 
+// Configurar fecha automática al seleccionar estado
+watch(newState, (val) => {
+  if (val === 'Entregado' || val === 'Cancelado') {
+    const today = new Date();
+    newFechaEntrega.value = today.toISOString().split('T')[0];
+  } else {
+    newFechaEntrega.value = '';
+  }
+});
+
 onMounted(async () => {
   await fetchSolicitudes();
 });
 </script>
 
 <style scoped>
+
 .texto-truncado {
   max-width: 200px;
   word-wrap: break-word;

@@ -1,6 +1,18 @@
 <template>
   <div class="q-pa-lg">
     <ToolBar />
+    <div class="bread ">
+      <q-btn
+      icon="arrow_back"
+            outline
+            rounded
+            label="Volver"
+            class="q-mr-sm"
+            size="sm"
+            @click="$router.back()"
+          />
+    </div>
+    <q-separator class="q-my-lg" />
     <q-table
       title="Lista de Usuarios"
       title-class="text-bold "
