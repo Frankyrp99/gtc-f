@@ -368,7 +368,7 @@ async function onSubmit() {
   $q.loading.show();
 
   try {
-    const response = await api.post('/api/Solicitudes/', form);
+    await api.post('/api/Solicitudes/', form);
     console.log('Formulario enviado:', form);
 
     $q.notify({

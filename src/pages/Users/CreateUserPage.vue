@@ -51,7 +51,7 @@
                 emit-value
                 map-options
                 :options="[
-                  
+
                   { label: 'Especialista', value: 'especialista' },
                   { label: 'Director', value: 'director' },
                 ]"
@@ -153,16 +153,10 @@ async function onSubmit() {
     });
 
     router.push('/Admin');
-  } catch (error: any) {
+  } catch (error) {
     let errorMessage = 'Error al crear el usuario';
 
-    if (error.response?.data) {
-      if (error.response.data.email) {
-        errorMessage = error.response.data.email[0];
-      } else if (error.response.data.password) {
-        errorMessage = error.response.data.password[0];
-      }
-    }
+    
 
     $q.notify({
       type: 'negative',

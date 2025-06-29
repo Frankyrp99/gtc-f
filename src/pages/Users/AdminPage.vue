@@ -15,6 +15,11 @@
       loading-label="Cargando..."
       rows-per-page-label="Usuarios por Página"
     >
+    <template v-slot:body-cell-entidad="props">
+      <q-td :props="props">
+        {{ getEntidadNombre(props.row) }}
+      </q-td>
+    </template>
       <template v-slot:top-right>
         <div class="row q-gutter-md">
           <q-btn
@@ -181,11 +186,14 @@ type UsersType = {
   id: string;
   email: string;
   role: string;
-  entidad?: {
-    id: number;
-    nombre: string;
-  };
+  entidad?:
+    | {
+        id: number;
+        nombre: string;
+      }
+    ;
 };
+
 
 const columns = computed(() => {
   const baseColumns = [
@@ -217,13 +225,7 @@ const columns = computed(() => {
     baseColumns.push({
       name: 'entidad',
       label: 'Entidad',
-      field: (row: UsersType) => {
-        if (row.entidad) {
-          const entidad = entidades.value.find((e) => e.id === row.entidad);
-          return entidad ? entidad.nombre : 'Sin entidad';
-        }
-        return 'Sin entidad';
-      },
+      field: 'entidad', // Ahora es un string simple
       align: 'left',
       sortable: true,
       filter: true,
@@ -232,6 +234,13 @@ const columns = computed(() => {
 
   return baseColumns;
 });
+
+// Función auxiliar para obtener el nombre de la entidad
+function getEntidadNombre(row: UsersType) {
+  if (!row.entidad) return 'Sin entidad';
+  const entidad = entidades.value.find(e => e.id === row.entidad?.id);
+  return entidad ? entidad.nombre : 'Sin entidad';
+}
 
 type EntidadType = {
   id: number;
@@ -369,11 +378,9 @@ async function saveEditUser() {
     });
 
     editDialogOpen.value = false;
-  } catch (error: any) {
+  } catch (error) {
     let errorMessage = 'Error al actualizar el usuario';
-    if (error.response?.data) {
-      errorMessage = Object.values(error.response.data).flat().join(', ');
-    }
+
     $q.notify({
       type: 'negative',
       message: errorMessage,
@@ -408,7 +415,7 @@ async function eliminar(selectedUser: { id: string }) {
           position: 'top-right',
         });
       });
-  } catch (error: any) {
+  } catch (error) {
     $q.notify({
       type: 'negative',
       message: 'Error al eliminar el usuario',
