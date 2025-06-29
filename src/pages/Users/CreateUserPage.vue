@@ -44,6 +44,7 @@
           <div class="row q-col-gutter-md q-mt-sm">
             <div class="col-md-6 col-xs-12">
               <q-select
+                v-if="user.isAdmin"
                 outlined
                 dense
                 v-model="form.role"
@@ -51,9 +52,21 @@
                 emit-value
                 map-options
                 :options="[
-
                   { label: 'Especialista', value: 'especialista' },
                   { label: 'Director', value: 'director' },
+                ]"
+              />
+              <q-select
+                v-else
+                outlined
+                dense
+                v-model="form.role"
+                label="Rol del Usuario *"
+                emit-value
+                map-options
+                :options="[
+                  { label: 'Especialista', value: 'especialista' },
+
                 ]"
               />
             </div>
@@ -86,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
@@ -94,6 +107,7 @@ import { useQuasar } from 'quasar';
 const router = useRouter();
 const $q = useQuasar();
 const isPwd = ref(true);
+const user = ref({ role: 'especialista', isAdmin: false, isDirector: false });
 
 interface Form {
   email: string;
@@ -119,6 +133,35 @@ const email_Rules: Rule[] = [
 ];
 const password_Rules: Rule[] = [(v) => !!v || 'La Contraseña es requerida'];
 
+const fetchUserData = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const config = {
+      headers: {
+        Authorization: `Token ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await api.get('/api/users', config);
+
+    // Verificar si la petición fue exitosa
+    if (response.status === 200) {
+      user.value.role = response.data.role;
+      user.value.isAdmin = response.data.role === 'admin';
+      user.value.isDirector = response.data.role === 'director';
+
+      console.log('Datos del usuario obtenidos correctamente.');
+    } else {
+      console.error(
+        `Error al obtener los datos del usuario: Estado ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+  }
+};
+
 async function onSubmit() {
   if (!form.email || !form.password) {
     $q.notify({
@@ -140,11 +183,15 @@ async function onSubmit() {
 
     $q.loading.show();
 
-     await api.post('/api/users/list/', {
-      email: form.email,
-      password: form.password,
-      role: form.role
-    }, config);
+    await api.post(
+      '/api/users/list/',
+      {
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      },
+      config
+    );
 
     $q.notify({
       type: 'positive',
@@ -156,8 +203,6 @@ async function onSubmit() {
   } catch (error) {
     let errorMessage = 'Error al crear el usuario';
 
-    
-
     $q.notify({
       type: 'negative',
       message: errorMessage,
@@ -167,6 +212,9 @@ async function onSubmit() {
     $q.loading.hide();
   }
 }
+onMounted(async () => {
+  await fetchUserData();
+});
 </script>
 
 <style scoped>
